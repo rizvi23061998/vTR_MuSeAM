@@ -1,0 +1,4 @@
+../data/SRR5241432/parameter.txt
+../data/SRR5241432/SRR5241432_seq.fa
+../data/SRR5241432/SRR5241432_out.dat
+
