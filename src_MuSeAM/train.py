@@ -26,7 +26,7 @@ def main(argv = None):
         arguments = []
         with open(argumentfile,'r') as f:
             for line in f:
-                arguments.append(line)
+                arguments.append(line.rstrip('\n'))
 
 
         #input args
