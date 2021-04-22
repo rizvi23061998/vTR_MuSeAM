@@ -30,7 +30,7 @@ def main(argv = None):
 
 
         #input args
-        parameter_file = argv[1]
+        parameter_file = arguments[1]
         #e.g. parameter1.txt
         fasta_file = arguments[2]
         #e.g. sequences.fa
