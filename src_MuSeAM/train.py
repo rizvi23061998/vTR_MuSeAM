@@ -7,6 +7,7 @@ def train(file_name):
     dict = {}
     with open(file_name) as f:
         for line in f:
+           print(line)
            (key, val) = line.split()
            dict[key] = val
 
@@ -28,13 +29,13 @@ def main(argv = None):
             for line in f:
                 arguments.append(line.rstrip('\n'))
 
-
+        print(arguments)
         #input args
-        parameter_file = arguments[1]
+        parameter_file = arguments[0]
         #e.g. parameter1.txt
-        fasta_file = arguments[2]
+        fasta_file = arguments[1]
         #e.g. sequences.fa
-        readout_file = arguments[3]
+        readout_file = arguments[2]
         #e.g. wt_readout.dat
         
     ## excute the code
