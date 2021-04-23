@@ -76,7 +76,7 @@ class ConvolutionLayer(Conv1D):
             x_tf = self.kernel  ##x_tf after reshaping is a tensor and not a weight variable :(
             x_tf = tf.transpose(x_tf, [2, 0, 1])
 
-            alpha = 1000
+            alpha = 100
             beta = 1/alpha
             bkg = tf.constant([0.25, 0.25, 0.25, 0.25])
             bkg_tf = tf.cast(bkg, tf.float32)
