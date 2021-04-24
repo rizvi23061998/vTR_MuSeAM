@@ -41,11 +41,6 @@ from sklearn.metrics import r2_score
 from sklearn.model_selection import train_test_split, StratifiedKFold, cross_val_score, KFold
 from sklearn.utils import shuffle
 
-#Reproducibility
-seed = random.randint(1,1000)
-
-np.random.seed(seed)
-tf.random.set_seed(seed)
 
 class ConvolutionLayer(Conv1D):
     def __init__(self, filters,
@@ -114,6 +109,11 @@ class nn_model:
         self.readout_file = readout_file
         
 
+        #Reproducibility    
+        seed = 1234#random.randint(1,1000)
+
+        np.random.seed(seed)
+        tf.random.set_seed(seed)
         self.eval()
         #self.filter_importance()
         #self.cross_val()
