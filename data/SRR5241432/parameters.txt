@@ -1,7 +1,8 @@
-filters 512
+filters 16
 kernel_size 12
 pool_type Max
 regularizer L_1
 activation_type linear
 epochs 10
 batch_size 64
+alpha 100
