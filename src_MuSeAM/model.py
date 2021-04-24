@@ -370,7 +370,7 @@ class nn_model:
         rc_fasta = dict["reverse"]
         readout = dict["readout"]
 
-        seed = random.randint(1,1000)
+        seed = self.seed#random.randint(1,1000)
 
         x1_train, x1_test, y1_train, y1_test = train_test_split(fw_fasta, readout, test_size=0.1, random_state=seed)
         # split for reverse complemenet sequences
