@@ -54,6 +54,7 @@ class ConvolutionLayer(Conv1D):
                  padding='valid',
                  activation=None,
                  use_bias=False,
+                 alpha=100,
                  kernel_initializer='glorot_uniform',
                  __name__ = 'ConvolutionLayer',
                  **kwargs):
@@ -64,6 +65,7 @@ class ConvolutionLayer(Conv1D):
             kernel_initializer=kernel_initializer,
             **kwargs)
         self.run_value = 1
+        self.alpha = alpha
 
     def call(self, inputs):
 
@@ -76,9 +78,9 @@ class ConvolutionLayer(Conv1D):
             x_tf = self.kernel  ##x_tf after reshaping is a tensor and not a weight variable :(
             x_tf = tf.transpose(x_tf, [2, 0, 1])
 
-            alpha = 100
+            alpha = self.alpha
             beta = 1/alpha
-            bkg = tf.constant([0.25, 0.25, 0.25, 0.25])
+            bkg = tf.constant([0.3, 0.2, 0.3, 0.2])
             bkg_tf = tf.cast(bkg, tf.float32)
             filt_list = tf.map_fn(lambda x: tf.math.scalar_mul(beta, tf.subtract(tf.subtract(tf.subtract(tf.math.scalar_mul(alpha, x), tf.expand_dims(tf.math.reduce_max(tf.math.scalar_mul(alpha, x), axis = 1), axis = 1)), tf.expand_dims(tf.math.log(tf.math.reduce_sum(tf.math.exp(tf.subtract(tf.math.scalar_mul(alpha, x), tf.expand_dims(tf.math.reduce_max(tf.math.scalar_mul(alpha, x), axis = 1), axis = 1))), axis = 1)), axis = 1)), tf.math.log(tf.reshape(tf.tile(bkg_tf, [tf.shape(x)[0]]), [tf.shape(x)[0], tf.shape(bkg_tf)[0]])))), x_tf)
             #print("type of output from map_fn is", type(filt_list)) ##type of output from map_fn is <class 'tensorflow.python.framework.ops.Tensor'>   shape of output from map_fn is (10, 12, 4)
@@ -96,7 +98,7 @@ class ConvolutionLayer(Conv1D):
         return outputs
 
 class nn_model:
-    def __init__(self, fasta_file, readout_file, filters, kernel_size, pool_type, regularizer, activation_type, epochs, batch_size):
+    def __init__(self, fasta_file, readout_file, filters, kernel_size, pool_type, regularizer, activation_type, epochs, batch_size,alpha):
         """initialize basic parameters"""
         self.filters = filters
         self.kernel_size = kernel_size
@@ -105,10 +107,12 @@ class nn_model:
         self.activation_type = activation_type
         self.epochs = epochs
         self.batch_size = batch_size
+        self.alpha = alpha
         #self.stride = stride
         #self.create_model()
         self.fasta_file = fasta_file
         self.readout_file = readout_file
+        
 
         self.eval()
         #self.filter_importance()
@@ -147,7 +151,7 @@ class nn_model:
         #first_layer = Conv1D(filters=self.filters, kernel_size=self.kernel_size, data_format='channels_last', input_shape=(dim_num[1],dim_num[2]), use_bias = False)
         ## with trainable = False
         #first_layer = Conv1D(filters=self.filters, kernel_size=self.kernel_size, kernel_initializer = my_init, data_format='channels_last', input_shape=(dim_num[1],dim_num[2]), use_bias = False, trainable=False)
-        first_layer = ConvolutionLayer(filters=self.filters, kernel_size=self.kernel_size, data_format='channels_last', use_bias = True)
+        first_layer = ConvolutionLayer(filters=self.filters, kernel_size=self.kernel_size, data_format='channels_last', use_bias = True,alpha = self.alpha)
 
         fw = first_layer(forward)
         bw = first_layer(reverse)
