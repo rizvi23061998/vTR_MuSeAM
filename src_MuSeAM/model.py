@@ -112,8 +112,8 @@ class nn_model:
         #Reproducibility    
         self.seed = 1234#random.randint(1,1000)
 
-        np.random.seed(seed)
-        tf.random.set_seed(seed)
+        np.random.seed(self.seed)
+        tf.random.set_seed(self.seed)
         self.eval()
         #self.filter_importance()
         #self.cross_val()
@@ -242,7 +242,7 @@ class nn_model:
         readout = dict["readout"]
 
         seed = self.seed#random.randint(1,1000)
-        
+
 
         x1_train, x1_test, y1_train, y1_test = train_test_split(fw_fasta, readout, test_size=0.1, random_state=seed)
         # split for reverse complemenet sequences
