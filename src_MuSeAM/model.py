@@ -114,10 +114,10 @@ class nn_model:
 
         np.random.seed(self.seed)
         tf.random.set_seed(self.seed)
-        self.eval()
+        # self.eval()
         #self.filter_importance()
         #self.cross_val()
-        #self.hyperopt_tuner()
+        self.hyperopt_tuner()
 
     def create_model(self):
         # different metric functions
@@ -478,9 +478,9 @@ class nn_model:
 
             seed = random.randint(1,1000)
 
-            x1_train, x1_test, y1_train, y1_test = train_test_split(fw_fasta, readout, test_size=0.1, random_state=seed)
+            x1_train, x1_test, y1_train, y1_test = train_test_split(fw_fasta, readout, test_size=0.2, random_state=seed)
             # split for reverse complemenet sequences
-            x2_train, x2_test, y2_train, y2_test = train_test_split(rc_fasta, readout, test_size=0.1, random_state=seed)
+            x2_train, x2_test, y2_train, y2_test = train_test_split(rc_fasta, readout, test_size=0.2, random_state=seed)
             #assert x1_test == x2_test
             #assert y1_test == y2_test
 
@@ -504,9 +504,9 @@ class nn_model:
             return history2[0]
 
         parameter=dict(kernel_size=hp.choice('kernel_size',[12, 16]),
-                       batch_size=hp.choice('batch_size',[512]),
-                       epochs=hp.choice('epochs',[30,40,50]),
-                       filters=hp.choice('filters',[16, 256]))
+                       batch_size=hp.choice('batch_size',[64]),
+                       epochs=hp.choice('epochs',[20,30,40,50]),
+                       filters=hp.choice('filters',[8,16,32,64, 128]))
 
         # calling the hyperopt function and setting the maximum iteration to 100
         best_params=fmin(objective,
