@@ -7,7 +7,7 @@ def train(file_name):
     dict = {}
     with open(file_name) as f:
         for line in f:
-           print(line)
+        #    print(line)
            (key, val) = line.split()
            dict[key] = val
 

@@ -17,12 +17,14 @@ from scipy.stats import spearmanr, pearsonr
 from hyperopt import fmin
 from hyperopt import hp
 from hyperopt import tpe
+# from hyperopt import fmax
 
 # specifically for model visualization
 import keras
 from keras.utils.vis_utils import model_to_dot
 from keras.utils.vis_utils import plot_model
 from keras.models import Model
+from keras.callbacks import ModelCheckpoint
 
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
@@ -114,10 +116,10 @@ class nn_model:
 
         np.random.seed(self.seed)
         tf.random.set_seed(self.seed)
-        # self.eval()
+        self.eval()
         #self.filter_importance()
         #self.cross_val()
-        self.hyperopt_tuner()
+        # self.hyperopt_tuner()
 
     def create_model(self):
         # different metric functions
@@ -397,8 +399,10 @@ class nn_model:
         y1_train = keras.utils.to_categorical(y1_train, 2)
         y1_test = keras.utils.to_categorical(y1_test, 2)
 
+        checkpoint = ModelCheckpoint('model-{epoch:03d}-{accuracy:03f}-{val_accuracy:03f}.h5', verbose=1, monitor='val_loss',save_best_only=True, mode='auto')  
+
         # train the data
-        model.fit({'forward': x1_train, 'reverse': x2_train}, y1_train, epochs=self.epochs, batch_size=self.batch_size, validation_split=0.1)
+        model.fit({'forward': x1_train, 'reverse': x2_train}, y1_train, epochs=self.epochs, batch_size=self.batch_size, validation_split=0.1,callbacks=[checkpoint])
         ## Save the entire model as a SavedModel.
         ##model.save('my_model')
         # Save weights only: later used in self.filter_importance()
@@ -460,7 +464,7 @@ class nn_model:
         print('test-set seed number is: ' + str(seed))
 
     def hyperopt_tuner(self):
-        def objective(param):
+        def objective(params):
             prep = preprocess(self.fasta_file, self.readout_file)
 
             # if want mono-nucleotide sequences
@@ -476,13 +480,20 @@ class nn_model:
             rc_fasta = dict["reverse"]
             readout = dict["readout"]
 
-            seed = random.randint(1,1000)
+            # seed = random.randint(1,1000)
+            seed = self.seed 
 
             x1_train, x1_test, y1_train, y1_test = train_test_split(fw_fasta, readout, test_size=0.2, random_state=seed)
             # split for reverse complemenet sequences
             x2_train, x2_test, y2_train, y2_test = train_test_split(rc_fasta, readout, test_size=0.2, random_state=seed)
             #assert x1_test == x2_test
             #assert y1_test == y2_test
+
+            self.filters = params["filters"]
+            self.kernel_size = params["kernel_size"]
+            self.epochs = params["epochs"]
+            self.batch_size = params["batch_size"]
+            self.alpha = params["alpha"]
 
             model = self.create_model()
 
@@ -493,20 +504,32 @@ class nn_model:
             y2_train = np.asarray(y2_train)
             y2_test = np.asarray(y2_test)
 
+            y1_train_orig = y1_train.copy()
+            y1_test_orig = y1_test.copy()
+
+            # if we want to merge two training dataset
+            # comb = np.concatenate((y1_train, y2_train))
+
+            ## Change it to categorical values
+            y1_train = keras.utils.to_categorical(y1_train, 2)
+            y1_test = keras.utils.to_categorical(y1_test, 2)
             # if we want to merge two training dataset
             # comb = np.concatenate((y1_train, y2_train))
 
             # train the data
             model.fit({'forward': x1_train, 'reverse': x2_train}, y1_train, epochs=self.epochs, batch_size=self.batch_size, validation_split=0.1)
+             
+            test_pred = model.predict({'forward': x1_test, 'reverse': x2_test})
+            test_pred = np.argmax(test_pred,axis=1)
 
-            history2 = model.evaluate({'forward': x1_test, 'reverse': x2_test}, y1_test)
-
-            return history2[0]
+            auc_score = sklearn.metrics.roc_auc_score(y1_test_orig, test_pred)
+            return -auc_score
 
         parameter=dict(kernel_size=hp.choice('kernel_size',[12, 16]),
-                       batch_size=hp.choice('batch_size',[64]),
+                       batch_size=hp.choice('batch_size',[64,128]),
                        epochs=hp.choice('epochs',[20,30,40,50]),
-                       filters=hp.choice('filters',[8,16,32,64, 128]))
+                       filters=hp.choice('filters',[8,16,32,64,128]),
+                       alpha=hp.choice('alpha',[50,100]))
 
         # calling the hyperopt function and setting the maximum iteration to 100
         best_params=fmin(objective,
